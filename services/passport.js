@@ -12,11 +12,16 @@ passport.use(
             clientSecret: keys.googleClientSecret,
             callbackURL: '/auth/google/callback'
         },
-        (accessToken, refreshToken, profile, cb) => {
-            new Users({ googleId: profile.id }).save();
-            // User.findOrCreate({ googleId: profile.id }, function(err, user) {
-            //     return cb(err, user);
-            // });
+        (accessToken, refreshToken, profile, done) => {
+            Users.findOne({ googleId: profile.id }).then(existingUser => {
+                if (existingUser) {
+                    done(null, existingUser);
+                } else {
+                    new Users({ googleId: profile.id }).save().then(user => {
+                        done(null, user);
+                    });
+                }
+            });
         }
     )
 );
